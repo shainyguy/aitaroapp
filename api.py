@@ -1,18 +1,16 @@
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
-import hashlib
-import hmac
-import json
+import aiohttp
 import os
+import json
 import aiosqlite
+from datetime import datetime
 
 app = FastAPI()
 
-# CORS для Mini App
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,10 +20,9 @@ app.add_middleware(
 )
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-DATABASE_PATH = "astro_bot.db"
+DATABASE_PATH = os.getenv("DATABASE_PATH", "astro_bot.db")
+STARS_PRICE = 250
 
-
-# ==================== МОДЕЛИ ====================
 
 class ActionRequest(BaseModel):
     user_id: int
@@ -33,51 +30,16 @@ class ActionRequest(BaseModel):
     data: Dict[str, Any] = {}
 
 
-# ==================== ПРОВЕРКА TELEGRAM ====================
-
-def verify_telegram_data(init_data: str) -> Optional[dict]:
-    """Проверка данных от Telegram"""
-    if not init_data or not BOT_TOKEN:
-        return None
-    
-    try:
-        parsed = dict(x.split('=') for x in init_data.split('&'))
-        check_hash = parsed.pop('hash', None)
-        
-        if not check_hash:
-            return None
-        
-        # Создаём строку для проверки
-        data_check = '\n'.join(f'{k}={v}' for k, v in sorted(parsed.items()))
-        
-        # Создаём секретный ключ
-        secret_key = hmac.new(
-            b'WebAppData', 
-            BOT_TOKEN.encode(), 
-            hashlib.sha256
-        ).digest()
-        
-        # Проверяем хеш
-        calculated_hash = hmac.new(
-            secret_key,
-            data_check.encode(),
-            hashlib.sha256
-        ).hexdigest()
-        
-        if calculated_hash == check_hash:
-            if 'user' in parsed:
-                return json.loads(parsed['user'])
-        
-        return None
-    except Exception as e:
-        print(f"Verification error: {e}")
-        return None
+class InvoiceRequest(BaseModel):
+    user_id: int
+    product: str
+    method: str
 
 
 # ==================== БАЗА ДАННЫХ ====================
 
 async def get_user_data(user_id: int) -> dict:
-    """Получить данные пользователя"""
+    """Получить данные пользователя из БД бота"""
     try:
         async with aiosqlite.connect(DATABASE_PATH) as db:
             db.row_factory = aiosqlite.Row
@@ -86,19 +48,25 @@ async def get_user_data(user_id: int) -> dict:
                 "SELECT * FROM users WHERE user_id = ?", (user_id,)
             ) as cursor:
                 user = await cursor.fetchone()
-                
+            
             if not user:
-                return {}
+                return {
+                    'userId': user_id,
+                    'isPremium': False,
+                    'freeUsed': 0,
+                    'readings': 0,
+                    'bonusDays': 0
+                }
             
             user = dict(user)
             
-            # Статистика рефералов
-            async with db.execute(
-                "SELECT COUNT(*) FROM referrals WHERE referrer_id = ?", (user_id,)
-            ) as cursor:
-                referrals = (await cursor.fetchone())[0]
+            # Проверяем подписку
+            is_premium = False
+            if user.get('subscription_until'):
+                sub_until = datetime.fromisoformat(user['subscription_until'])
+                is_premium = sub_until > datetime.now()
             
-            # Знак зодиака
+            # Зодиак
             zodiac_map = {
                 'aries': ('Овен', '♈'), 'taurus': ('Телец', '♉'),
                 'gemini': ('Близнецы', '♊'), 'cancer': ('Рак', '♋'),
@@ -109,99 +77,157 @@ async def get_user_data(user_id: int) -> dict:
             }
             
             zodiac_key = user.get('zodiac_sign', '')
-            zodiac_info = zodiac_map.get(zodiac_key, (None, None))
+            zodiac_info = zodiac_map.get(zodiac_key, ('Овен', '♈'))
+            
+            # Статистика рефералов
+            async with db.execute(
+                "SELECT COUNT(*) FROM referrals WHERE referrer_id = ?", (user_id,)
+            ) as cursor:
+                referrals = (await cursor.fetchone())[0]
             
             return {
-                'id': user_id,
-                'name': user.get('first_name', 'Путник'),
+                'userId': user_id,
+                'userName': user.get('first_name', 'Путник'),
                 'zodiac': zodiac_info[0],
                 'zodiacEmoji': zodiac_info[1],
-                'subscription': user.get('subscription_until') is not None,
+                'isPremium': is_premium,
+                'freeUsed': user.get('free_readings_used', 0),
                 'readings': user.get('free_readings_used', 0),
                 'referrals': referrals,
                 'bonusDays': user.get('referral_bonus_days', 0)
             }
     except Exception as e:
         print(f"Database error: {e}")
-        return {}
+        return {
+            'userId': user_id,
+            'isPremium': False,
+            'freeUsed': 0,
+            'readings': 0
+        }
 
 
-async def log_action(user_id: int, action: str, data: dict):
-    """Логирование действий"""
-    print(f"User {user_id}: {action} - {data}")
+async def increment_readings(user_id: int):
+    """Увеличить счётчик использований"""
+    try:
+        async with aiosqlite.connect(DATABASE_PATH) as db:
+            await db.execute("""
+                UPDATE users SET free_readings_used = free_readings_used + 1
+                WHERE user_id = ?
+            """, (user_id,))
+            await db.commit()
+    except Exception as e:
+        print(f"Database error: {e}")
+
+
+# ==================== TELEGRAM BOT API ====================
+
+async def create_stars_invoice(user_id: int) -> Optional[str]:
+    """Создать инвойс для Telegram Stars"""
+    if not BOT_TOKEN:
+        return None
+    
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/createInvoiceLink"
+    
+    payload = {
+        "title": "⭐ Премиум подписка",
+        "description": "Безлимитный доступ на 30 дней",
+        "payload": f"subscription_{user_id}",
+        "currency": "XTR",  # Telegram Stars
+        "prices": [{"label": "Подписка", "amount": STARS_PRICE}]
+    }
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get("ok"):
+                        return data["result"]
+    except Exception as e:
+        print(f"Invoice error: {e}")
+    
+    return None
+
+
+async def send_message_to_user(user_id: int, text: str):
+    """Отправить сообщение пользователю"""
+    if not BOT_TOKEN:
+        return
+    
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            await session.post(url, json={
+                "chat_id": user_id,
+                "text": text,
+                "parse_mode": "Markdown"
+            })
+    except Exception as e:
+        print(f"Send message error: {e}")
 
 
 # ==================== ЭНДПОИНТЫ ====================
 
 @app.get("/")
 async def root():
-    """Главная страница — Mini App"""
     return FileResponse("index.html")
 
 
 @app.get("/api/user/{user_id}")
-async def get_user(user_id: int, request: Request):
+async def get_user(user_id: int):
     """Получить данные пользователя"""
-    # Проверяем Telegram данные
-    init_data = request.headers.get("X-Telegram-Init-Data", "")
-    # tg_user = verify_telegram_data(init_data)  # Опционально
-    
-    user_data = await get_user_data(user_id)
-    return JSONResponse(user_data)
+    data = await get_user_data(user_id)
+    return JSONResponse(data)
 
 
 @app.post("/api/action")
-async def handle_action(action_req: ActionRequest, request: Request):
-    """Обработка действий из Mini App"""
+async def handle_action(req: ActionRequest):
+    """Обработка действий"""
     
-    user_id = action_req.user_id
-    action = action_req.action
-    data = action_req.data
-    
-    await log_action(user_id, action, data)
-    
-    # Обрабатываем разные действия
-    if action == "tarot_reading":
-        return {"status": "ok", "message": "Расклад сохранён"}
-    
-    elif action == "horoscope":
-        return {
-            "status": "ok",
-            "text": "Звёзды благоволят вашим начинаниям. Сегодня хороший день для новых проектов."
-        }
-    
-    elif action == "compatibility":
-        return {"status": "ok", "score": data.get("score", 75)}
-    
-    elif action == "money_forecast":
-        return {
-            "status": "ok",
-            "text": "Финансовая удача на вашей стороне. Благоприятные дни: вторник и четверг."
-        }
-    
-    elif action == "karma_analysis":
-        return {
-            "status": "ok",
-            "text": "Ваша душа несёт опыт многих жизней. Главный урок — научиться доверять."
-        }
-    
-    elif action == "buy_premium":
-        # Здесь можно отправить сообщение в бот
-        return {"status": "ok", "redirect": "bot"}
-    
-    elif action == "share_referral":
+    if req.action == "use_reading":
+        await increment_readings(req.user_id)
         return {"status": "ok"}
+    
+    elif req.action == "buy_subscription":
+        # Отправляем сообщение в бот
+        await send_message_to_user(
+            req.user_id,
+            "💳 Для оформления подписки нажми /start и выбери «⭐ Подписка»"
+        )
+        return {"status": "ok", "redirect": "bot"}
     
     return {"status": "ok"}
 
 
+@app.post("/api/create-invoice")
+async def create_invoice(req: InvoiceRequest):
+    """Создать инвойс для оплаты"""
+    
+    if req.method == "stars":
+        invoice_link = await create_stars_invoice(req.user_id)
+        
+        if invoice_link:
+            return {"status": "ok", "invoice_link": invoice_link}
+        else:
+            return {"status": "error", "message": "Failed to create invoice"}
+    
+    elif req.method == "yookassa":
+        # Для ЮKassa отправляем в бот
+        await send_message_to_user(
+            req.user_id,
+            "💳 Переходи к оплате в боте: /start → Подписка"
+        )
+        return {"status": "ok", "redirect": "bot"}
+    
+    return {"status": "error"}
+
+
 @app.get("/health")
 async def health():
-    """Проверка здоровья"""
     return {"status": "healthy"}
 
 
-# Запуск
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
