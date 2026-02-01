@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Astro AI ✨</title>
+    
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Цветовая схема 2025 */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-gold: #f59e0b;
+            
+            --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #ec4899 50%, #f59e0b 100%);
+            --gradient-card: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            --gradient-glow: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+            
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.4);
+            
+            --border-color: rgba(255, 255, 255, 0.08);
+            --shadow-glow: 0 0 60px rgba(139, 92, 246, 0.3);
+            
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Анимированный фон */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .bg-orb-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent-purple);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .bg-orb-2 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-pink);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -5s;
+        }
+
+        .bg-orb-3 {
+            width: 200px;
+            height: 200px;
+            background: var(--accent-cyan);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.1); }
+            50% { transform: translate(-20px, 20px) scale(0.9); }
+            75% { transform: translate(20px, 30px) scale(1.05); }
+        }
+
+        /* Контейнер приложения */
+        .app-container {
+            max-width: 100%;
+            min-height: 100vh;
+            padding: 16px;
+            padding-bottom: 100px;
+        }
+
+        /* Хедер */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--gradient-card);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            border-color: var(--accent-purple);
+        }
+
+        /* Приветствие */
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .welcome-subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .zodiac-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 50px;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        .zodiac-badge span {
+            font-size: 20px;
+        }
+
+        /* Карточки */
+        .card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card-glow {
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* Сетка функций */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .feature-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient-card);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover::before,
+        .feature-card:active::before {
+            opacity: 1;
+        }
+
+        .feature-card:active {
+            transform: scale(0.95);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 12px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Большая карточка дня */
+        .daily-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .daily-card::after {
+            content: '✨';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 40px;
+            opacity: 0.3;
+        }
+
+        .daily-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-purple);
+            margin-bottom: 8px;
+        }
+
+        .daily-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .daily-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .daily-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .daily-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Лунный виджет */
+        .moon-widget {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .moon-icon {
+            font-size: 48px;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        .moon-info {
+            flex: 1;
+        }
+
+        .moon-day {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .moon-phase {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .moon-energy {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .energy-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+        }
+
+        .energy-dot.inactive {
+            background: var(--border-color);
+        }
+
+        /* Модальные окна */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            width: 100%;
+            max-width: 500px;
+            max-height: 85vh;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            overflow: hidden;
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-glass);
+            border: none;
+            color: var(--text-primary);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(85vh - 80px);
+        }
+
+        /* Таро карты */
+        .tarot-cards {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 24px 0;
+            perspective: 1000px;
+        }
+
+        .tarot-card {
+            width: 100px;
+            height: 160px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+            border: 2px solid var(--accent-purple);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            position: relative;
+        }
+
+        .tarot-card::before {
+            content: '🎴';
+            position: absolute;
+            backface-visibility: hidden;
+        }
+
+        .tarot-card.revealed::before {
+            content: attr(data-card);
+            animation: reveal 0.6s ease forwards;
+        }
+
+        @keyframes reveal {
+            0% { transform: rotateY(180deg); }
+            100% { transform: rotateY(0); }
+        }
+
+        .tarot-card:hover {
+            transform: translateY(-10px) rotateX(5deg);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
+        }
+
+        .tarot-card.selected {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+        }
+
+        /* Расклад результат */
+        .reading-result {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .reading-card-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 8px;
+        }
+
+        .reading-interpretation {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Кнопки */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: var(--bg-glass);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Нижняя навигация */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-color);
+            padding: 12px 16px;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+        }
+
+        .nav-item.active {
+            color: var(--accent-purple);
+        }
+
+        .nav-item.active .nav-icon {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+        /* Подписка */
+        .subscription-card {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .sub-crown {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .sub-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .sub-features {
+            text-align: left;
+            margin: 16px 0;
+        }
+
+        .sub-feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .sub-feature::before {
+            content: '✓';
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        .sub-price {
+            font-size: 32px;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub-period {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Профиль */
+        .profile-header {
+            text-align: center;
+            padding: 24px 0;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin: 0 auto 16px;
+            border: 3px solid var(--border-color);
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .profile-zodiac {
+            color: var(--accent-purple);
+            font-size: 16px;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Страницы */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Лоадер */
+        .loader {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .loader-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Skeleton loading */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-glass) 25%, rgba(255,255,255,0.1) 50%, var(--bg-glass) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-sm);
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Toast уведомления */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            z-index: 2000;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            border-color: #10b981;
+        }
+
+        .toast.error {
+            border-color: #ef4444;
+        }
+
+        /* Гороскоп страница */
+        .horoscope-header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .horoscope-sign {
+            font-size: 64px;
+            margin-bottom: 8px;
+        }
+
+        .horoscope-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding: 4px 0;
+        }
+
+        .horoscope-tab {
+            flex-shrink: 0;
+            padding: 10px 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .horoscope-tab.active {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: transparent;
+        }
+
+        .horoscope-content {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+        }
+
+        .horoscope-section {
+            margin-bottom: 20px;
+        }
+
+        .horoscope-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--accent-purple);
+        }
+
+        .horoscope-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        /* Совместимость */
+        .compat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .compat-sign {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: var(--bg-glass);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .compat-sign.selected {
+            border-color: var(--accent-purple);
+            background: var(--gradient-card);
+        }
+
+        .compat-result {
+            text-align: center;
+            padding: 24px;
+        }
+
+        .compat-score {
+            font-size: 64px;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .compat-bar {
+            height: 8px;
+            background: var(--bg-glass);
+            border-radius: 4px;
+            margin: 16px 0;
+            overflow: hidden;
+        }
+
+        .compat-bar-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Анимированный фон -->
+    <div class="bg-animation">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+    </div>
+
+    <!-- Toast уведомления -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✨</span>
+        <span id="toastText">Сообщение</span>
+    </div>
+
+    <div class="app-container">
+        <!-- ============ ГЛАВНАЯ СТРАНИЦА ============ -->
+        <div class="page active" id="page-home">
+            <!-- Хедер -->
+            <header class="header">
+                <div class="logo">
+                    <div class="logo-icon">🔮</div>
+                    <span class="logo-text">Astro AI</span>
+                </div>
+                <div class="user-avatar" onclick="showPage('profile')">
+                    <span id="userEmoji">👤</span>
+                </div>
+            </header>
+
+            <!-- Приветствие -->
+            <section class="welcome-section">
+                <h1 class="welcome-title">Привет, <span id="userName">Путник</span>!</h1>
+                <p class="welcome-subtitle">Звёзды приготовили для тебя послание</p>
+                <div class="zodiac-badge" id="zodiacBadge" style="display: none;">
+                    <span id="zodiacEmoji">♈</span>
+                    <span id="zodiacName">Овен</span>
+                </div>
+            </section>
+
+            <!-- Лунный виджет -->
+            <div class="moon-widget" onclick="showPage('moon')">
+                <div class="moon-icon" id="moonEmoji">🌙</div>
+                <div class="moon-info">
+                    <div class="moon-day" id="moonDay">12 лунный день</div>
+                    <div class="moon-phase" id="moonPhase">Растущая луна • Дева</div>
+                    <div class="moon-energy" id="moonEnergy">
+                        <div class="energy-dot"></div>
+                        <div class="energy-dot"></div>
+                        <div class="energy-dot"></div>
+                        <div class="energy-dot"></div>
+                        <div class="energy-dot inactive"></div>
+                    </div>
+                </div>
+                <span style="color: var(--text-muted);">→</span>
+            </div>
+
+            <!-- Карточка дня -->
+            <div class="daily-card" onclick="openTarotModal()">
+                <div class="daily-label">Карта дня</div>
+                <div class="daily-title">Узнай своё послание ✨</div>
+                <div class="daily-text">Вытяни карту и получи совет от Вселенной на сегодня</div>
+                <button class="daily-btn">
+                    🎴 Вытянуть карту
+                </button>
+            </div>
+
+            <!-- Сетка функций -->
+            <div class="features-grid">
+                <div class="feature-card" onclick="showPage('tarot')">
+                    <div class="feature-icon">🎴</div>
+                    <div class="feature-title">Таро</div>
+                    <div class="feature-desc">Расклады</div>
+                </div>
+                <div class="feature-card" onclick="showPage('horoscope')">
+                    <div class="feature-icon">⭐</div>
+                    <div class="feature-title">Гороскоп</div>
+                    <div class="feature-desc">На сегодня</div>
+                </div>
+                <div class="feature-card" onclick="showPage('compatibility')">
+                    <div class="feature-icon">💕</div>
+                    <div class="feature-title">Совместимость</div>
+                    <div class="feature-desc">Проверить</div>
+                </div>
+                <div class="feature-card" onclick="showPage('premium')">
+                    <div class="feature-icon">👑</div>
+                    <div class="feature-title">Премиум</div>
+                    <div class="feature-desc">Безлимит</div>
+                </div>
+            </div>
+
+            <!-- Быстрые действия -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="font-weight: 600;">⚡ Быстрые функции</span>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-glass" style="flex: 1; min-width: 140px;" onclick="showPage('money')">
+                        💰 Деньги
+                    </button>
+                    <button class="btn btn-glass" style="flex: 1; min-width: 140px;" onclick="showPage('karma')">
+                        🔮 Карма
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ СТРАНИЦА ТАРО ============ -->
+        <div class="page" id="page-tarot">
+            <header class="header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button onclick="showPage('home')" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">←</button>
+                    <span style="font-size: 18px; font-weight: 600;">🎴 Расклады Таро</span>
+                </div>
+            </header>
+
+            <div class="card" onclick="openTarotModal('one')">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <span style="font-size: 32px;">🎴</span>
+                    <div>
+                        <div style="font-weight: 600;">Карта дня</div>
+                        <div style="color: var(--text-muted); font-size: 13px;">Одна карта на сегодня</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" onclick="openTarotModal('three')">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <span style="font-size: 32px;">🔮</span>
+                    <div>
+                        <div style="font-weight: 600;">3 карты</div>
+                        <div style="color: var(--text-muted); font-size: 13px;">Прошлое • Настоящее • Будущее</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" onclick="openTarotModal('love')">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <span style="font-size: 32px;">💕</span>
+                    <div>
+                        <div style="font-weight: 600;">На отношения</div>
+                        <div style="color: var(--text-muted); font-size: 13px;">Анализ любовной ситуации</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" onclick="openTarotModal('yesno')">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <span style="font-size: 32px;">❓</span>
+                    <div>
+                        <div style="font-weight: 600;">Да / Нет</div>
+                        <div style="color: var(--text-muted); font-size: 13px;">Быстрый ответ</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ СТРАНИЦА ГОРОСКОП ============ -->
+        <div class="page" id="page-horoscope">
+            <header class="header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button onclick="showPage('home')" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">←</button>
+                    <span style="font-size: 18px; font-weight: 600;">⭐ Гороскоп</span>
+                </div>
+            </header>
+
+            <div class="horoscope-header">
+                <div class="horoscope-sign" id="horoSign">♈</div>
+                <div style="font-size: 24px; font-weight: 700;" id="horoSignName">Овен</div>
+            </div>
+
+            <div class="horoscope-tabs">
+                <div class="horoscope-tab active" onclick="loadHoroscope('today')">Сегодня</div>
+                <div class="horoscope-tab" onclick="loadHoroscope('tomorrow')">Завтра</div>
+                <div class="horoscope-tab" onclick="loadHoroscope('week')">Неделя</div>
+                <div class="horoscope-tab" onclick="loadHoroscope('love')">Любовь</div>
+                <div class="horoscope-tab" onclick="loadHoroscope('money')">Деньги</div>
+            </div>
+
+            <div class="horoscope-content" id="horoscopeContent">
+                <div class="horoscope-section">
+                    <div class="horoscope-section-title">🌟 Общий прогноз</div>
+                    <div class="horoscope-text" id="horoText">
+                        Сегодня звёзды благоволят новым начинаниям. Энергия дня поддерживает активные действия и важные решения...
+                    </div>
+                </div>
+                <div class="horoscope-section">
+                    <div class="horoscope-section-title">💕 Любовь</div>
+                    <div class="horoscope-text">Романтические отношения на подъёме...</div>
+                </div>
+                <div class="horoscope-section">
+                    <div class="horoscope-section-title">💼 Карьера</div>
+                    <div class="horoscope-text">Благоприятный период для деловых переговоров...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ СТРАНИЦА СОВМЕСТИМОСТЬ ============ -->
+        <div class="page" id="page-compatibility">
+            <header class="header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button onclick="showPage('home')" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">←</button>
+                    <span style="font-size: 18px; font-weight: 600;">💕 Совместимость</span>
+                </div>
+            </header>
+
+            <div style="text-align: center; margin-bottom: 16px;">
+                <p style="color: var(--text-secondary);">Выбери знак партнёра</p>
+            </div>
+
+            <div class="compat-grid" id="compatGrid">
+                <div class="compat-sign" onclick="selectSign(this, 'aries')">♈</div>
+                <div class="compat-sign" onclick="selectSign(this, 'taurus')">♉</div>
+                <div class="compat-sign" onclick="selectSign(this, 'gemini')">♊</div>
+                <div class="compat-sign" onclick="selectSign(this, 'cancer')">♋</div>
+                <div class="compat-sign" onclick="selectSign(this, 'leo')">♌</div>
+                <div class="compat-sign" onclick="selectSign(this, 'virgo')">♍</div>
+                <div class="compat-sign" onclick="selectSign(this, 'libra')">♎</div>
+                <div class="compat-sign" onclick="selectSign(this, 'scorpio')">♏</div>
+                <div class="compat-sign" onclick="selectSign(this, 'sagittarius')">♐</div>
+                <div class="compat-sign" onclick="selectSign(this, 'capricorn')">♑</div>
+                <div class="compat-sign" onclick="selectSign(this, 'aquarius')">♒</div>
+                <div class="compat-sign" onclick="selectSign(this, 'pisces')">♓</div>
+            </div>
+
+            <div id="compatResult" style="display: none;">
+                <div class="compat-result">
+                    <div id="compatPair" style="font-size: 40px; margin-bottom: 8px;">♈ + ♌</div>
+                    <div class="compat-score" id="compatScore">85%</div>
+                    <div class="compat-bar">
+                        <div class="compat-bar-fill" id="compatBar" style="width: 85%;"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div style="font-weight: 600; margin-bottom: 12px;">💫 Анализ совместимости</div>
+                    <div style="color: var(--text-secondary); line-height: 1.7;" id="compatText">
+                        Отличная пара! Огненные знаки понимают друг друга...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ СТРАНИЦА ЛУНА ============ -->
+        <div class="page" id="page-moon">
+            <header class="header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button onclick="showPage('home')" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">←</button>
+                    <span style="font-size: 18px; font-weight: 600;">🌙 Лунный календарь</span>
+                </div>
+            </header>
+
+            <div style="text-align: center; padding: 24px 0;">
+                <div style="font-size: 80px;" id="moonBigEmoji">🌔</div>
+                <div style="font-size: 28px; font-weight: 700; margin-top: 8px;" id="moonBigDay">12 лунный день</div>
+                <div style="color: var(--text-secondary);" id="moonBigPhase">Растущая луна в Деве</div>
+            </div>
+
+            <div class="card">
+                <div style="font-weight: 600; margin-bottom: 12px; color: var(--accent-gold);">✨ Благоприятно</div>
+                <div style="color: var(--text-secondary); line-height: 1.7;" id="moonGood">
+                    • Начинать новые проекты<br>
+                    • Стричь волосы для роста<br>
+                    • Финансовые операции
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="font-weight: 600; margin-bottom: 12px; color: #ef4444;">⚠️ Не рекомендуется</div>
+                <div style="color: var(--text-secondary); line-height: 1.7;" id="moonBad">
+                    • Важные переговоры<br>
+                    • Медицинские процедуры
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="font-weight: 600; margin-bottom: 12px;">💄 Календарь красоты</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div style="padding: 12px; background: var(--bg-glass); border-radius: var(--radius-sm);">
+                        <div style="font-size: 20px;">✂️</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Стрижка</div>
+                        <div style="color: #10b981; font-weight: 600;">Отлично</div>
+                    </div>
+                    <div style="padding: 12px; background: var(--bg-glass); border-radius: var(--radius-sm);">
+                        <div style="font-size: 20px;">💅</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Маникюр</div>
+                        <div style="color: var(--accent-gold); font-weight: 600;">Хорошо</div>
+                    </div>
+                    <div style="padding: 12px; background: var(--bg-glass); border-radius: var(--radius-sm);">
+                        <div style="font-size: 20px;">🎨</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Окрашивание</div>
+                        <div style="color: #ef4444; font-weight: 600;">Нет</div>
+                    </div>
+                    <div style="padding: 12px; background: var(--bg-glass); border-radius: var(--radius-sm);">
+                        <div style="font-size: 20px;">💆</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Косметолог</div>
+                        <div style="color: #10b981; font-weight: 600;">Отлично</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ СТРАНИЦА ПРОФИЛЬ ============ -->
+        <div class="page" id="page-profile">
+            <header class="header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button onclick="showPage('home')" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">←</button>
+                    <span style="font-size: 18px; font-weight: 600;">👤 Профиль</span>
+                </div>
+            </header>
+
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">👤</div>
+                <div class="profile-name" id="profileName">Путник</div>
+                <div class="profile-zodiac" id="profileZodiac">♈ Овен</div>
+            </div>
+
+            <div class="profile-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="statReadings">0</div>
+                    <div class="stat-label">Раскладов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statReferrals">0</div>
+                    <div class="stat-label">Друзей</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statDays">0</div>
+                    <div class="stat-label">Бонус дней</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600;">⭐ Подписка</div>
+                        <div style="color: var(--text-muted); font-size: 13px;" id="subStatus">Не активна</div>
+                    </div>
+                    <button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="showPage('premium')">
+                        Оформить
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="font-weight: 600; margin-bottom: 12px;">👥 Пригласить друга</div>
+                <div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">
+                    Получи +1 день подписки за каждого друга!
+                </div>
+                <button class="btn btn-glass" onclick="shareReferral()">
+                    📤 Поделиться ссылкой
+                </button>
+            </div>
+        </div>
+
+        <!-- ============ СТРАНИЦА ПРЕМИУМ ============ -->
+        <div class="page" id="page-premium">
+            <header class="header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button onclick="showPage('home')" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">←</button>
+                    <span style="font-size: 18px; font-weight: 600;">👑 Премиум</span>
+                </div>
+            </header>
+
+            <div class="subscription-card">
+                <div class="sub-crown">👑</div>
+                <div class="sub-title">Astro AI Premium</div>
+                <div class="sub-features">
+                    <div class="sub-feature">Безлимитные расклады Таро</div>
+                    <div class="sub-feature">Ежедневный гороскоп</div>
+                    <div class="sub-feature">Денежный прогноз</div>
+                    <div class="sub-feature">Кармический анализ</div>
+                    <div class="sub-feature">Синастрия по фото</div>
+                    <div class="sub-feature">Астро-будильник</div>
+                    <div class="sub-feature">Ретроградные алерты</div>
+                </div>
+                <div class="sub-price">490 ₽</div>
+                <div class="sub-period">в месяц</div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 24px;" onclick="buyPremium('rub')">
+                💳 Оплатить картой
+            </button>
+
+            <button class="btn btn-secondary" style="margin-top: 12px;" onclick="buyPremium('stars')">
+                ⭐ Оплатить 250 Stars
+            </button>
+        </div>
+
+        <!-- ============ СТРАНИЦА ДЕНЬГИ ============ -->
+        <div class="page" id="page-money">
+            <header class="header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button onclick="showPage('home')" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">←</button>
+                    <span style="font-size: 18px; font-weight: 600;">💰 Денежный прогноз</span>
+                </div>
+            </header>
+
+            <div style="text-align: center; padding: 24px 0;">
+                <div style="font-size: 64px;">💰</div>
+                <div style="font-size: 20px; font-weight: 600; margin-top: 8px;">Финансовая неделя</div>
+            </div>
+
+            <div class="card" id="moneyContent">
+                <div class="loader">
+                    <div class="loader-spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ СТРАНИЦА КАРМА ============ -->
+        <div class="page" id="page-karma">
+            <header class="header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button onclick="showPage('home')" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">←</button>
+                    <span style="font-size: 18px; font-weight: 600;">🔮 Кармический разбор</span>
+                </div>
+            </header>
+
+            <div style="text-align: center; padding: 24px 0;">
+                <div style="font-size: 64px;">🔮</div>
+                <div style="font-size: 20px; font-weight: 600; margin-top: 8px;">Анализ прошлых жизней</div>
+            </div>
+
+            <div class="card" id="karmaContent">
+                <div class="loader">
+                    <div class="loader-spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Нижняя навигация -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="showPage('home')" id="nav-home">
+            <span class="nav-icon">🏠</span>
+            <span>Главная</span>
+        </div>
+        <div class="nav-item" onclick="showPage('tarot')" id="nav-tarot">
+            <span class="nav-icon">🎴</span>
+            <span>Таро</span>
+        </div>
+        <div class="nav-item" onclick="showPage('horoscope')" id="nav-horoscope">
+            <span class="nav-icon">⭐</span>
+            <span>Гороскоп</span>
+        </div>
+        <div class="nav-item" onclick="showPage('moon')" id="nav-moon">
+            <span class="nav-icon">🌙</span>
+            <span>Луна</span>
+        </div>
+        <div class="nav-item" onclick="showPage('profile')" id="nav-profile">
+            <span class="nav-icon">👤</span>
+            <span>Профиль</span>
+        </div>
+    </nav>
+
+    <!-- ============ МОДАЛЬНОЕ ОКНО ТАРО ============ -->
+    <div class="modal-overlay" id="tarotModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">🎴 Расклад Таро</span>
+                <button class="modal-close" onclick="closeTarotModal()">✕</button>
+            </div>
+            <div class="modal-content">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <p style="color: var(--text-secondary);" id="tarotInstruction">Выбери карту</p>
+                </div>
+
+                <div class="tarot-cards" id="tarotCards">
+                    <div class="tarot-card" onclick="selectTarotCard(this, 0)"></div>
+                    <div class="tarot-card" onclick="selectTarotCard(this, 1)"></div>
+                    <div class="tarot-card" onclick="selectTarotCard(this, 2)"></div>
+                </div>
+
+                <div id="tarotResult" style="display: none;">
+                    <div class="reading-result">
+                        <div class="reading-card-name" id="cardName">Маг</div>
+                        <div class="reading-interpretation" id="cardInterpretation">
+                            Карта Маг символизирует силу воли, творчество и мастерство...
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="tarotBtn" style="margin-top: 20px;" onclick="doTarotReading()">
+                    🔮 Получить расклад
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+        
+        const tg = window.Telegram?.WebApp;
+        
+        // Данные пользователя
+        let userData = {
+            id: null,
+            name: 'Путник',
+            zodiac: null,
+            zodiacEmoji: null,
+            subscription: false,
+            readings: 0,
+            referrals: 0,
+            bonusDays: 0
+        };
+
+        // API URL (замените на ваш)
+        const API_URL = window.location.origin + '/api';
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+
+        async function initApp() {
+            // Настройка Telegram WebApp
+            if (tg) {
+                tg.ready();
+                tg.expand();
+                
+                // Устанавливаем цвета
+                tg.setHeaderColor('#0a0a0f');
+                tg.setBackgroundColor('#0a0a0f');
+                
+                // Получаем данные пользователя
+                if (tg.initDataUnsafe?.user) {
+                    const user = tg.initDataUnsafe.user;
+                    userData.id = user.id;
+                    userData.name = user.first_name || 'Путник';
+                    
+                    document.getElementById('userName').textContent = userData.name;
+                    document.getElementById('profileName').textContent = userData.name;
+                    document.getElementById('userEmoji').textContent = getNameEmoji(userData.name);
+                    document.getElementById('profileAvatar').textContent = getNameEmoji(userData.name);
+                }
+                
+                // Загружаем данные с сервера
+                await loadUserData();
+            }
+            
+            // Загружаем лунный день
+            updateMoonWidget();
+        }
+
+        // ==================== API ФУНКЦИИ ====================
+        
+        async function loadUserData() {
+            try {
+                const response = await fetch(`${API_URL}/user/${userData.id}`, {
+                    headers: {
+                        'X-Telegram-Init-Data': tg?.initData || ''
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    userData = { ...userData, ...data };
+                    
+                    // Обновляем UI
+                    updateUI();
+                }
+            } catch (e) {
+                console.log('API not available, using local mode');
+            }
+        }
+
+        async function syncWithBot(action, data = {}) {
+            try {
+                const response = await fetch(`${API_URL}/action`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Telegram-Init-Data': tg?.initData || ''
+                    },
+                    body: JSON.stringify({
+                        user_id: userData.id,
+                        action: action,
+                        data: data
+                    })
+                });
+                
+                if (response.ok) {
+                    return await response.json();
+                }
+            } catch (e) {
+                console.log('Sync failed:', e);
+            }
+            return null;
+        }
+
+        // ==================== UI ФУНКЦИИ ====================
+        
+        function updateUI() {
+            // Зодиак
+            if (userData.zodiac) {
+                document.getElementById('zodiacBadge').style.display = 'inline-flex';
+                document.getElementById('zodiacEmoji').textContent = userData.zodiacEmoji;
+                document.getElementById('zodiacName').textContent = userData.zodiac;
+                document.getElementById('profileZodiac').textContent = `${userData.zodiacEmoji} ${userData.zodiac}`;
+                document.getElementById('horoSign').textContent = userData.zodiacEmoji;
+                document.getElementById('horoSignName').textContent = userData.zodiac;
+            }
+            
+            // Статистика
+            document.getElementById('statReadings').textContent = userData.readings || 0;
+            document.getElementById('statReferrals').textContent = userData.referrals || 0;
+            document.getElementById('statDays').textContent = userData.bonusDays || 0;
+            
+            // Подписка
+            if (userData.subscription) {
+                document.getElementById('subStatus').textContent = 'Активна ✓';
+                document.getElementById('subStatus').style.color = '#10b981';
+            }
+        }
+
+        function showPage(pageId) {
+            // Скрываем все страницы
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            // Показываем нужную
+            document.getElementById(`page-${pageId}`).classList.add('active');
+            
+            // Обновляем навигацию
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            const navItem = document.getElementById(`nav-${pageId}`);
+            if (navItem) navItem.classList.add('active');
+            
+            // Загружаем контент для некоторых страниц
+            if (pageId === 'money') loadMoneyForecast();
+            if (pageId === 'karma') loadKarmaAnalysis();
+            
+            // Синхронизация с ботом
+            syncWithBot('page_view', { page: pageId });
+            
+            // Haptic feedback
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.selectionChanged();
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const text = document.getElementById('toastText');
+            
+            icon.textContent = type === 'success' ? '✨' : '⚠️';
+            text.textContent = message;
+            toast.className = `toast show ${type}`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function getNameEmoji(name) {
+            const emojis = ['🌟', '✨', '💫', '⭐', '🔮', '🌙', '☀️', '🌈'];
+            const index = name.charCodeAt(0) % emojis.length;
+            return emojis[index];
+        }
+
+        // ==================== ТАРО ====================
+        
+        let selectedCards = [];
+        let tarotType = 'one';
+
+        const TAROT_CARDS = [
+            { name: 'Шут', emoji: '🃏', meaning: 'Новые начинания, спонтанность, свобода духа. Время довериться потоку жизни.' },
+            { name: 'Маг', emoji: '🎩', meaning: 'Сила воли и творчество. Все ресурсы для успеха у тебя есть.' },
+            { name: 'Верховная Жрица', emoji: '🌙', meaning: 'Интуиция и тайные знания. Прислушайся к внутреннему голосу.' },
+            { name: 'Императрица', emoji: '👑', meaning: 'Изобилие и плодородие. Время для творчества и заботы.' },
+            { name: 'Император', emoji: '🏛️', meaning: 'Стабильность и власть. Время для структуры и порядка.' },
+            { name: 'Влюблённые', emoji: '💕', meaning: 'Выбор и союз. Важное решение в отношениях.' },
+            { name: 'Колесница', emoji: '🏆', meaning: 'Победа и движение вперёд. Преодоление препятствий.' },
+            { name: 'Сила', emoji: '🦁', meaning: 'Внутренняя сила и мужество. Терпение принесёт результат.' },
+            { name: 'Колесо Фортуны', emoji: '🎡', meaning: 'Перемены и судьба. Удача на твоей стороне.' },
+            { name: 'Звезда', emoji: '⭐', meaning: 'Надежда и вдохновение. Светлое будущее впереди.' },
+            { name: 'Луна', emoji: '🌕', meaning: 'Интуиция и иллюзии. Доверяй чувствам, не логике.' },
+            { name: 'Солнце', emoji: '☀️', meaning: 'Радость и успех. Всё складывается наилучшим образом.' },
+            { name: 'Мир', emoji: '🌍', meaning: 'Завершение и гармония. Цикл успешно закрыт.' }
+        ];
+
+        function openTarotModal(type = 'one') {
+            tarotType = type;
+            selectedCards = [];
+            
+            // Сброс UI
+            document.querySelectorAll('.tarot-card').forEach(c => {
+                c.classList.remove('selected', 'revealed');
+                c.removeAttribute('data-card');
+            });
+            document.getElementById('tarotResult').style.display = 'none';
+            document.getElementById('tarotBtn').style.display = 'block';
+            document.getElementById('tarotInstruction').textContent = 'Выбери карту';
+            
+            document.getElementById('tarotModal').classList.add('active');
+            
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
+
+        function closeTarotModal() {
+            document.getElementById('tarotModal').classList.remove('active');
+        }
+
+        function selectTarotCard(card, index) {
+            if (card.classList.contains('selected')) {
+                card.classList.remove('selected');
+                selectedCards = selectedCards.filter(i => i !== index);
+            } else {
+                card.classList.add('selected');
+                selectedCards.push(index);
+            }
+            
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.selectionChanged();
+            }
+        }
+
+        async function doTarotReading() {
+            if (selectedCards.length === 0) {
+                showToast('Выбери хотя бы одну карту', 'error');
+                return;
+            }
+            
+            // Анимация переворота
+            const cards = document.querySelectorAll('.tarot-card');
+            const randomCards = [];
+            
+            selectedCards.forEach((index, i) => {
+                const card = cards[index];
+                const randomCard = TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)];
+                randomCards.push(randomCard);
+                
+                setTimeout(() => {
+                    card.classList.add('revealed');
+                    card.setAttribute('data-card', randomCard.emoji);
+                    
+                    if (tg?.HapticFeedback) {
+                        tg.HapticFeedback.impactOccurred('heavy');
+                    }
+                }, i * 300);
+            });
+            
+            // Показываем результат
+            setTimeout(() => {
+                const resultCard = randomCards[0];
+                document.getElementById('cardName').textContent = `${resultCard.emoji} ${resultCard.name}`;
+                document.getElementById('cardInterpretation').textContent = resultCard.meaning;
+                document.getElementById('tarotResult').style.display = 'block';
+                document.getElementById('tarotBtn').style.display = 'none';
+                
+                // Синхронизация с ботом
+                syncWithBot('tarot_reading', { 
+                    type: tarotType, 
+                    cards: randomCards.map(c => c.name) 
+                });
+                
+            }, selectedCards.length * 300 + 500);
+        }
+
+        // ==================== ГОРОСКОП ====================
+        
+        async function loadHoroscope(period) {
+            // Обновляем табы
+            document.querySelectorAll('.horoscope-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Показываем лоадер
+            document.getElementById('horoscopeContent').innerHTML = `
+                <div class="loader"><div class="loader-spinner"></div></div>
+            `;
+            
+            // Запрос к API
+            const result = await syncWithBot('horoscope', { 
+                period: period,
+                zodiac: userData.zodiac || 'Овен'
+            });
+            
+            // Временный контент
+            setTimeout(() => {
+                const texts = {
+                    today: 'Сегодня звёзды благоволят новым начинаниям. Отличный день для активных действий!',
+                    tomorrow: 'Завтра ожидается приток позитивной энергии. Хороший момент для важных решений.',
+                    week: 'Неделя принесёт интересные возможности. Будьте открыты переменам.',
+                    love: 'В любовных делах царит романтическая атмосфера. Время для признаний.',
+                    money: 'Финансовая удача на вашей стороне. Хороший период для инвестиций.'
+                };
+                
+                document.getElementById('horoscopeContent').innerHTML = `
+                    <div class="horoscope-section">
+                        <div class="horoscope-section-title">🌟 Прогноз на ${period}</div>
+                        <div class="horoscope-text">${result?.text || texts[period]}</div>
+                    </div>
+                `;
+            }, 1000);
+        }
+
+        // ==================== СОВМЕСТИМОСТЬ ====================
+        
+        let selectedPartnerSign = null;
+
+        const ZODIAC_DATA = {
+            aries: { name: 'Овен', emoji: '♈' },
+            taurus: { name: 'Телец', emoji: '♉' },
+            gemini: { name: 'Близнецы', emoji: '♊' },
+            cancer: { name: 'Рак', emoji: '♋' },
+            leo: { name: 'Лев', emoji: '♌' },
+            virgo: { name: 'Дева', emoji: '♍' },
+            libra: { name: 'Весы', emoji: '♎' },
+            scorpio: { name: 'Скорпион', emoji: '♏' },
+            sagittarius: { name: 'Стрелец', emoji: '♐' },
+            capricorn: { name: 'Козерог', emoji: '♑' },
+            aquarius: { name: 'Водолей', emoji: '♒' },
+            pisces: { name: 'Рыбы', emoji: '♓' }
+        };
+
+        async function selectSign(element, sign) {
+            // Убираем выделение
+            document.querySelectorAll('.compat-sign').forEach(s => s.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedPartnerSign = sign;
+            
+            // Рассчитываем совместимость
+            const score = Math.floor(Math.random() * 40) + 60; // 60-100%
+            const partner = ZODIAC_DATA[sign];
+            const user = userData.zodiacEmoji || '♈';
+            
+            document.getElementById('compatPair').textContent = `${user} + ${partner.emoji}`;
+            document.getElementById('compatScore').textContent = `${score}%`;
+            document.getElementById('compatBar').style.width = `${score}%`;
+            
+            const texts = [
+                'Отличная пара! Между вами сильная энергетическая связь.',
+                'Хорошая совместимость. Есть потенциал для крепких отношений.',
+                'Интересное сочетание! Разные темпераменты дополняют друг друга.',
+                'Гармоничный союз. Вы понимаете друг друга на глубинном уровне.'
+            ];
+            document.getElementById('compatText').textContent = texts[Math.floor(Math.random() * texts.length)];
+            
+            document.getElementById('compatResult').style.display = 'block';
+            
+            // Синхронизация
+            syncWithBot('compatibility', { 
+                partner: sign,
+                score: score 
+            });
+            
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+
+        // ==================== ЛУНА ====================
+        
+        function updateMoonWidget() {
+            const moonDays = [
+                { day: 1, phase: '🌑 Новолуние', good: true },
+                { day: 7, phase: '🌓 Первая четверть', good: true },
+                { day: 14, phase: '🌕 Полнолуние', good: false },
+                { day: 21, phase: '🌗 Последняя четверть', good: true },
+                { day: 28, phase: '🌘 Убывающая', good: true }
+            ];
+            
+            const today = new Date().getDate();
+            const moonDay = (today % 30) + 1;
+            const phase = moonDay < 15 ? '🌒 Растущая луна' : '🌘 Убывающая луна';
+            const signs = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы'];
+            const moonSign = signs[today % 12];
+            
+            const moonEmoji = moonDay < 8 ? '🌒' : moonDay < 15 ? '🌓' : moonDay < 22 ? '🌔' : '🌘';
+            
+            document.getElementById('moonEmoji').textContent = moonEmoji;
+            document.getElementById('moonDay').textContent = `${moonDay} лунный день`;
+            document.getElementById('moonPhase').textContent = `${phase} • ${moonSign}`;
+            
+            document.getElementById('moonBigEmoji').textContent = moonEmoji;
+            document.getElementById('moonBigDay').textContent = `${moonDay} лунный день`;
+            document.getElementById('moonBigPhase').textContent = `${phase} в ${moonSign}е`;
+        }
+
+        // ==================== ДЕНЕЖНЫЙ ПРОГНОЗ ====================
+        
+        async function loadMoneyForecast() {
+            const result = await syncWithBot('money_forecast', {});
+            
+            setTimeout(() => {
+                document.getElementById('moneyContent').innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 12px; color: var(--accent-gold);">💰 Прогноз на неделю</div>
+                    <div style="color: var(--text-secondary); line-height: 1.8;">
+                        ${result?.text || `
+                        <p>✅ <strong>Благоприятные дни:</strong> Вторник, Четверг</p>
+                        <p>💸 <strong>Лучше избегать трат:</strong> Понедельник</p>
+                        <p>📈 <strong>Совет:</strong> Хорошее время для планирования бюджета и небольших инвестиций.</p>
+                        <p>🔮 <strong>Энергия денег:</strong> Стабильная, с тенденцией к росту.</p>
+                        `}
+                    </div>
+                `;
+            }, 1500);
+        }
+
+        // ==================== КАРМИЧЕСКИЙ АНАЛИЗ ====================
+        
+        async function loadKarmaAnalysis() {
+            const result = await syncWithBot('karma_analysis', {});
+            
+            setTimeout(() => {
+                document.getElementById('karmaContent').innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 12px; color: var(--accent-purple);">🔮 Кармические уроки</div>
+                    <div style="color: var(--text-secondary); line-height: 1.8;">
+                        ${result?.text || `
+                        <p>🌟 <strong>Прошлая жизнь:</strong> Ты был(а) связан(а) с искусством и творчеством.</p>
+                        <p>📚 <strong>Главный урок:</strong> Научиться доверять своей интуиции.</p>
+                        <p>💎 <strong>Талант из прошлого:</strong> Целительство и помощь другим.</p>
+                        <p>⚡ <strong>Кармический долг:</strong> Развивать терпение и принятие.</p>
+                        `}
+                    </div>
+                `;
+            }, 2000);
+        }
+
+        // ==================== ПЛАТЕЖИ ====================
+        
+        function buyPremium(method) {
+            if (method === 'stars' && tg) {
+                // Telegram Stars
+                tg.openInvoice('stars_subscription_payload', (status) => {
+                    if (status === 'paid') {
+                        showToast('Подписка активирована! 🎉');
+                        userData.subscription = true;
+                        updateUI();
+                        syncWithBot('subscription_activated', { method: 'stars' });
+                    }
+                });
+            } else {
+                // Отправляем в бот для оплаты через ЮKassa
+                syncWithBot('buy_premium', { method: 'yookassa' });
+                
+                if (tg) {
+                    tg.close();
+                }
+            }
+        }
+
+        // ==================== РЕФЕРАЛЬНАЯ ПРОГРАММА ====================
+        
+        function shareReferral() {
+            const referralLink = `https://t.me/${window.BOT_USERNAME || 'AstroAI_bot'}?start=ref_${userData.id}`;
+            const text = `🔮 Открой для себя мир Таро и астрологии!\n\n${referralLink}`;
+            
+            if (tg) {
+                tg.switchInlineQuery(text, ['users']);
+            } else {
+                navigator.clipboard?.writeText(referralLink);
+                showToast('Ссылка скопирована!');
+            }
+            
+            syncWithBot('share_referral', {});
+        }
+    </script>
+</body>
+</html>
